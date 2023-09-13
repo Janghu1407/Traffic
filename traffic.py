@@ -353,7 +353,7 @@ cb_cols.append('Target')
 
 from catboost import Pool, CatBoostClassifier
 model_cb = CatBoostClassifier(iterations=2000, 
-                               learning_rate = 0.03,
+                               learning_rate = 0.2,
                                depth= 6,
                                #eval_metric="AUC",
                                #loss_function="Logloss",
