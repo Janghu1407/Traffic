@@ -24,9 +24,9 @@ from tensorflow.keras.layers import RepeatVector, Layer, BatchNormalization, Dro
 from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold, KFold
 import random
 import tensorflow as tf
-tf.random.set_seed(2023)
-np.random.seed(2023)
-random.seed(2023)
+tf.random.set_seed(2000)
+np.random.seed(2000)
+random.seed(2000)
 
 from scipy.stats import skew, kurtosis
 from scipy.signal import find_peaks
@@ -357,7 +357,7 @@ model_cb = CatBoostClassifier(iterations=2000,
                                depth= 6,
                                #eval_metric="AUC",
                                #loss_function="Logloss",
-                               random_seed=2,
+                               random_seed=2000,
                                #od_wait=100,
                                od_type="Iter",
                                max_ctr_complexity=1,
