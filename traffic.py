@@ -392,7 +392,7 @@ oot['q_in'] = (1+oot['qSize'])/(1+oot['portPktIn'])
 
 new_oot = roll_up(oot, 50)
 predictions(new_oot)
-oot_pred = model.predict(new_oot[x_cols])
+oot_pred = model_cb.predict(new_oot[x_cols])
 oot_out = [oot_pred[i][0] for i in range(len(oot_pred))]
 new_oot['label'] = oot_out
 oot['Target'] = [int(x) for x in new_oot['label'] for i in range(50)]
