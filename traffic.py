@@ -44,6 +44,7 @@ for fname in glob.glob(path):
 train = pd.concat(train)
 train = train.reset_index(drop=True)
 
+###creating two new ratio features
 train['in_out'] = (1+train['portPktOut'])/(1+train['portPktIn'])
 train['q_in'] = (1+train['qSize'])/(1+train['portPktIn'])
 
@@ -252,12 +253,15 @@ x_cols = ['portPktIn_mean', 'portPktIn_std', 'portPktIn_std_top',
     'q_in_rel_25', 'q_in_rel_50', 'q_in_rel_75', 'q_in_rel_90',
     'q_in_rel_95', 'q_in_rel_99', 'q_in_rel_100']
 
-
+################################ TRAINING CODE
 new_train = roll_up(train, 50)
 rows = new_train.shape[0]
+### w is the rolling window while l is length of sequences
 w=50
 l = 100
 rem = rows%l
+
+####this is to create 100 length sequences and last remaining rows will be skipped and there predictionw will be the one prediction before
 if rem!=0:
     train_df = new_train.iloc[:-rem]
 else:
@@ -288,7 +292,7 @@ for train_index, val_index in kf.split(x_df):
     iter = iter+1
     
 
-
+##########prediction function which loads model and take mean of each 5 models
 def predictions(new_data):
     rows_data = new_data.shape[0]
     rem_data = rows_data%100
@@ -315,7 +319,7 @@ def predictions(new_data):
     r_1  = rem_data+1
     new_data['Target'] = new_data['Target'].fillna(int(new_data.iloc[-r_1]['Target']))
 
-
+#############For catboost model
 test_id = random.sample(new_train['file_id'].unique().tolist(), 10)
 new_test = new_train[new_train['file_id'].isin(test_id)]
 new_train_1 = new_train[~new_train['file_id'].isin(test_id)]
@@ -369,6 +373,8 @@ val_out = [val_pred[i][0] for i in range(len(val_pred))]
 train_out = [train_pred[i][0] for i in range(len(train_pred))]
 test_out = [test_pred[i][0] for i in range(len(test_pred))]
 
+
+################################TEST DATA SET predictions
 import glob
 path = "./Test_data/*.csv"
 oot = []
