@@ -262,6 +262,7 @@ if rem!=0:
     train_df = new_train.iloc[:-rem]
 else:
     train_df = new_train
+
 X_ = train_df[x_cols]
 Y_ = train_df['label']
 scaler.fit(X_)
@@ -270,10 +271,6 @@ x_df, y_df = sample(X_scaled, Y_,l)
 
 kf = KFold(n_splits = 5, shuffle = True,random_state = 2000)
 iter=0
-val_pred = []
-val_y = []
-train_pred = []
-train_y = []
 for train_index, val_index in kf.split(x_df):
     x_train = x_df[train_index]
     y_train = y_df[train_index]
@@ -288,15 +285,8 @@ for train_index, val_index in kf.split(x_df):
     K.set_value(model.optimizer.learning_rate, 0.001)
     model.compile(optimizer='Adam', loss='sparse_categorical_crossentropy',metrics = ['sparse_categorical_accuracy'])
     model.fit(x_train, y_train, validation_data = (x_val, y_val), epochs = 50, batch_size=64, callbacks=[es,mc], verbose=1)
-    model_1 = load_model(file_path, compile=False)
-    model_1.compile(optimizer='Adam', loss='sparse_categorical_crossentropy', metrics = ['sparse_categorical_accuracy'])
-    val_pred.append(predicted_data(model_1, x_val, l))
-    val_y_t = y_val.reshape(x_val.shape[0]*l)
-    val_y.append(val_y_t)
-    train_pred.append(predicted_data(model_1, x_train, l))
-    train_y_t = y_train.reshape(x_train.shape[0]*l)
-    train_y.append(train_y_t)   
     iter = iter+1
+    
 K.clear_session()
 
 
