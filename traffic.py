@@ -165,7 +165,7 @@ def sample_oot(inp_df, window_size):
     for x in range(len(window)-1):
         window_sample_x = inp_df.iloc[window[x]:window[x+1], :].values.tolist()
         x_sampled.append(window_sample_x)
-        return np.array(x_sampled)
+    return np.array(x_sampled)
 
 #####LSTM based model
 def model_seq(inp_shape):
@@ -300,6 +300,8 @@ def predictions(new_data):
         data_df = new_data
     else:
         data_df = new_data.iloc[:-rem_data]
+    
+    
     X_data = data_df[x_cols]
     X_data_scaled = pd.DataFrame(scaler.transform(X_data), columns = X_data.columns)
     x_data_df = sample_oot(X_data_scaled,100)
@@ -309,15 +311,18 @@ def predictions(new_data):
         model_l = load_model(file_path, compile=False)
         model_l.compile(optimizer='Adam', loss='sparse_categorical_crossentropy', metrics = ['sparse_categorical_accuracy'])
         pred_data.append(predicted_data(model_l, x_data_df, 100))   
+        
+    
     data_pred_df = pd.concat(pred_data)
     data_pred_df = data_pred_df.reset_index()
     data_predictions = data_pred_df.groupby('index').agg('mean')
     data_predictions.shape
     cols = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
     data_predictions['Target'] = data_predictions.apply(lambda x: cols[np.argmax([x[col] for col in cols])], axis = 1)
-    new_data['Target'] = data_predictions['Target'].astype('int')
-    r_1  = rem_data+1
-    new_data['Target'] = new_data['Target'].fillna(int(new_data.iloc[-r_1]['Target']))
+    new_data['Target'] = data_predictions['Target'].astype(int)
+    if rem_data!=0:
+        r_1  = rem_data+1
+        new_data['Target'] = new_data['Target'].fillna(int(new_data.iloc[-r_1]['Target']))
 
 #############For catboost model
 test_id = random.sample(new_train['file_id'].unique().tolist(), 10)
@@ -341,12 +346,13 @@ from numba import cuda
 device = cuda.get_current_device()
 device.reset()
 
-cb_cols = x_cols.append('time')
+cb_cols = x_cols.copy()
+cb_cols.append('time')
 cb_cols.append('Target')
 
 from catboost import Pool, CatBoostClassifier
 model_cb = CatBoostClassifier(iterations=2000, 
-                               learning_rate = 0.05,
+                               learning_rate = 0.03,
                                depth= 6,
                                #eval_metric="AUC",
                                #loss_function="Logloss",
@@ -365,6 +371,10 @@ model_cb = CatBoostClassifier(iterations=2000,
 model_cb = model_cb.fit(new_train_1[cb_cols], new_train_1['label'], verbose=True, 
                          eval_set=[(new_val[cb_cols], new_val['label'])],early_stopping_rounds=100)
 
+
+model_cb = model_cb.fit(new_train_1[cb_cols], new_train_1['label'], verbose=True, 
+                         eval_set=[(new_val[cb_cols], new_val['label'])],early_stopping_rounds=100)
+
 val_pred = model_cb.predict(new_val[cb_cols])
 train_pred = model_cb.predict(new_train_1[cb_cols])
 test_pred = model_cb.predict(new_test[cb_cols])
@@ -376,23 +386,24 @@ test_out = [test_pred[i][0] for i in range(len(test_pred))]
 
 ################################TEST DATA SET predictions
 import glob
-path = "./Test_data/*.csv"
+path = "/axp/buanalytics/csorchepds/dev/njanghu/hackathons/traffic/Test_data/*.csv"
 oot = []
 for fname in glob.glob(path):
     df = pd.read_csv(fname)
-    file_id = fname.split('.')[0].split('/')[-1].split('n')[1]
+    file_id = fname.split('.')[0].split('/')[-1].split('t')[-1]
     df['file_id'] = file_id
     oot.append(df)
 
     
 oot = pd.concat(oot)
 oot = oot.reset_index(drop=True)
+oot.shape
 oot['in_out'] = (1+oot['portPktOut'])/(1+oot['portPktIn'])
 oot['q_in'] = (1+oot['qSize'])/(1+oot['portPktIn'])
 
 new_oot = roll_up(oot, 50)
 predictions(new_oot)
-oot_pred = model_cb.predict(new_oot[x_cols])
+oot_pred = model_cb.predict(new_oot[cb_cols])
 oot_out = [oot_pred[i][0] for i in range(len(oot_pred))]
 new_oot['label'] = oot_out
 oot['Target'] = [int(x) for x in new_oot['label'] for i in range(50)]
