@@ -365,9 +365,9 @@ model_cb = CatBoostClassifier(iterations=2000,
 model_cb = model_cb.fit(new_train_1[cb_cols], new_train_1['label'], verbose=True, 
                          eval_set=[(new_val[cb_cols], new_val['label'])],early_stopping_rounds=100)
 
-val_pred = model.predict(new_val[cb_cols])
-train_pred = model.predict(new_train_1[cb_cols])
-test_pred = model.predict(new_test[cb_cols])
+val_pred = model_cb.predict(new_val[cb_cols])
+train_pred = model_cb.predict(new_train_1[cb_cols])
+test_pred = model_cb.predict(new_test[cb_cols])
 
 val_out = [val_pred[i][0] for i in range(len(val_pred))]
 train_out = [train_pred[i][0] for i in range(len(train_pred))]
