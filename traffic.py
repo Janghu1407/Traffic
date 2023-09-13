@@ -287,7 +287,6 @@ for train_index, val_index in kf.split(x_df):
     model.fit(x_train, y_train, validation_data = (x_val, y_val), epochs = 50, batch_size=64, callbacks=[es,mc], verbose=1)
     iter = iter+1
     
-K.clear_session()
 
 
 def predictions(new_data):
@@ -332,6 +331,11 @@ new_test = new_test.reset_index(drop=True)
 predictions(new_train_1)
 predictions(new_val)
 predictions(new_test)
+
+##to free up memory used
+from numba import cuda 
+device = cuda.get_current_device()
+device.reset()
 
 cb_cols = x_cols.append('time')
 cb_cols.append('Target')
