@@ -143,6 +143,7 @@ def roll_up(dataframe, window_size=50):
         new_df = pd.concat([new_df, df], axis=1)
     if 'label' in dataframe.columns:
         new_df['label'] = sample_labels(dataframe, dataframe['label'], window_size)
+    new_df['time'] = sample_time(dataframe, dataframe['time'], window_size)
     new_df['file_id'] = sample_labels(dataframe, dataframe['file_id'], window_size)
     return new_df
 
@@ -342,9 +343,9 @@ predictions(new_val)
 predictions(new_test)
 
 ##to free up memory used
-from numba import cuda 
-device = cuda.get_current_device()
-device.reset()
+#from numba import cuda 
+#device = cuda.get_current_device()
+#device.reset()
 
 cb_cols = x_cols.copy()
 cb_cols.append('time')
